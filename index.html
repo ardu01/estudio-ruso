@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#F2F2F7">
+  <meta name="description" content="Estudia ruso básico desde cero: alfabeto, vocabulario y práctica. Interfaz en español.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ruso">
+  <title>Estudio Ruso</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="icon" href="icons/icon-32.png" sizes="32x32" type="image/png">
+  <link rel="apple-touch-icon" href="icons/icon-180.png">
+  <link rel="stylesheet" href="css/app.css">
+  <script>
+    (function () {
+      try {
+        var raw = JSON.parse(localStorage.getItem('estudio-ruso') || 'null');
+        var theme = raw && raw.theme;
+        if (theme === 'light' || theme === 'dark') {
+          document.documentElement.setAttribute('data-theme', theme);
+        }
+        var dark = theme === 'dark' || (theme !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.setAttribute('content', dark ? '#000000' : '#F2F2F7');
+      } catch (error) {}
+    })();
+  </script>
+</head>
+<body>
+  <div class="app" id="app">
+    <main id="main">
+      <div class="pane">
+        <header class="hero">
+          <h1>Estudio</h1>
+          <p>Cargando…</p>
+        </header>
+      </div>
+    </main>
+    <footer id="dock"></footer>
+  </div>
+  <div id="sheet" class="sheet-root" hidden>
+    <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
+      <div class="sheet-card">
+        <p class="sheet-copy" id="sheet-title"><strong>¿Borrar el progreso?</strong>Se eliminarán la racha, las letras vistas y las tarjetas marcadas. El tema se conserva.</p>
+        <button type="button" class="sheet-btn danger" data-action="confirm-reset">Borrar progreso</button>
+      </div>
+      <button type="button" class="sheet-btn cancel sheet-cancel" data-action="close-sheet">Cancelar</button>
+    </div>
+  </div>
+  <noscript>
+    <p style="padding:24px;font-family:-apple-system,sans-serif">Estudio Ruso necesita JavaScript para las tarjetas, la práctica y el progreso en el dispositivo.</p>
+  </noscript>
+  <script src="js/data.js" defer></script>
+  <script src="js/text.js" defer></script>
+  <script src="js/store.js" defer></script>
+  <script src="js/speech.js" defer></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>
