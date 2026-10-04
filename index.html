@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#F2F2F7">
-  <meta name="description" content="Estudia ruso básico desde cero: alfabeto, vocabulario y práctica. Interfaz en español.">
+  <meta name="description" content="Estudia ruso básico desde cero: alfabeto, vocabulario, gramática y repaso. Interfaz en español.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -45,7 +45,7 @@
   <div id="sheet" class="sheet-root" hidden>
     <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheet-title">
       <div class="sheet-card">
-        <p class="sheet-copy" id="sheet-title"><strong>¿Borrar el progreso?</strong>Se eliminarán la racha, las letras vistas y las tarjetas marcadas. El tema se conserva.</p>
+        <p class="sheet-copy" id="sheet-title"><strong>¿Borrar el progreso?</strong>Se eliminarán la racha, la ruta, las letras vistas y el repaso. El tema y la meta diaria se conservan.</p>
         <button type="button" class="sheet-btn danger" data-action="confirm-reset">Borrar progreso</button>
       </div>
       <button type="button" class="sheet-btn cancel sheet-cancel" data-action="close-sheet">Cancelar</button>
@@ -55,9 +55,14 @@
     <p style="padding:24px;font-family:-apple-system,sans-serif">Estudio Ruso necesita JavaScript para las tarjetas, la práctica y el progreso en el dispositivo.</p>
   </noscript>
   <script src="js/data.js" defer></script>
+  <script src="js/vocab.js" defer></script>
+  <script src="js/lessons.js" defer></script>
   <script src="js/text.js" defer></script>
+  <script src="js/srs.js" defer></script>
+  <script src="js/cyrillic.js" defer></script>
   <script src="js/store.js" defer></script>
   <script src="js/speech.js" defer></script>
+  <script src="js/study.js" defer></script>
   <script src="js/app.js" defer></script>
 </body>
 </html>

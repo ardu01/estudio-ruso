@@ -8,7 +8,15 @@
   const memory = {
     flipped: false,
     letterFilter: 'all',
-    quiz: null
+    quiz: null,
+    query: '',
+    review: null,
+    listen: null,
+    write: null,
+    syllable: null,
+    syllableFilter: 'а',
+    dialogue: null,
+    grammar: null
   };
 
   function icon(name) {
@@ -28,6 +36,12 @@
     if (name === 'gear') {
       return '<svg ' + pen + '><circle cx="12" cy="12" r="3"/><path d="M12 3.5v2M12 18.5v2M3.5 12h2M18.5 12h2M5.8 5.8l1.4 1.4M16.8 16.8l1.4 1.4M18.2 5.8l-1.4 1.4M7.2 16.8l-1.4 1.4"/></svg>';
     }
+    if (name === 'path') {
+      return '<svg ' + pen + '><path d="M8 6h11M8 12h11M8 18h11"/><circle cx="5" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="5" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="5" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg>';
+    }
+    if (name === 'review') {
+      return '<svg ' + pen + '><circle cx="12" cy="12" r="8"/><path d="M12 8v5l3 2"/></svg>';
+    }
     return '<svg ' + pen + '><path d="M4 10h3.2L12 6v12l-4.8-4H4v-4Z"/><path d="M16 9.2a3.6 3.6 0 0 1 0 5.6"/></svg>';
   }
 
@@ -43,8 +57,16 @@
         if (!parts[1]) return { name: 'decks' };
         if (parts[2] === 'tarjetas') return { name: 'cards', deckId: parts[1] };
         if (parts[2] === 'practica') return { name: 'quiz', deckId: parts[1] };
+        if (parts[2] === 'escuchar') return { name: 'listen', deckId: parts[1] };
+        if (parts[2] === 'escribir') return { name: 'write', deckId: parts[1] };
         return { name: 'deck', deckId: parts[1] };
       }
+      if (parts[0] === 'ruta') return { name: 'path' };
+      if (parts[0] === 'silabas') return parts[1] === 'practica' ? { name: 'syllable-quiz' } : { name: 'syllables' };
+      if (parts[0] === 'gramatica') return { name: 'grammar', id: parts[1] || '' };
+      if (parts[0] === 'dialogos') return parts[1] ? { name: 'dialogue', id: parts[1] } : { name: 'dialogues' };
+      if (parts[0] === 'repaso') return parts[1] === 'sesion' ? { name: 'review-session' } : { name: 'review' };
+      if (parts[0] === 'favoritos') return { name: 'favorites' };
       if (parts[0] === 'ajustes') return { name: 'settings' };
       return { name: 'missing' };
     } catch (error) {
@@ -198,16 +220,6 @@
       '<a class="btn btn-fill" href="' + href + '"' + action + '>' + label + '</a></section>';
   }
 
-  function studyRows(state) {
-    const seen = Object.keys(state.seenLetters).length;
-    const alphabet = '<a class="row has-mark" href="#/letras"><span class="mark" lang="ru">А</span><span class="row-main"><span class="row-title">Alfabeto</span><span class="row-sub">33 letras, sonido y nota</span></span><span class="row-meta">' + seen + '/33</span><span class="chev" aria-hidden="true"></span></a>';
-    const decks = data.decks.map(function (deck) {
-      const known = knownCount(state, deck);
-      return '<a class="row has-mark" href="#/mazos/' + deck.id + '"><span class="mark" lang="ru">' + esc(deck.glyph) + '</span><span class="row-main"><span class="row-title">' + esc(deck.title) + '</span><span class="row-sub">' + esc(deck.blurb) + '</span></span><span class="row-meta">' + known + '/' + deck.cards.length + '</span><span class="chev" aria-hidden="true"></span></a>';
-    }).join('');
-    return alphabet + decks;
-  }
-
   function statsHtml(state) {
     const seen = Object.keys(state.seenLetters).length;
     const practice = state.quizAnswered ? state.quizCorrect + '/' + state.quizAnswered : '—';
@@ -222,9 +234,7 @@
   function renderHome() {
     const state = store.load();
     const pill = state.streak ? (state.streak === 1 ? '1 día' : state.streak + ' días') : '';
-    const body = continueHtml(state) +
-      '<h2 class="group-label">Estudiar</h2><div class="group">' + studyRows(state) + '</div>' +
-      statsHtml(state);
+    const body = continueHtml(state) + window.RusoStudy.homeDash(state) + statsHtml(state);
     return shell({
       title: 'Inicio',
       large: 'Estudio',
@@ -286,15 +296,13 @@
 
   function renderDecks() {
     const state = store.load();
-    const rows = data.decks.map(function (deck) {
-      const known = knownCount(state, deck);
-      return '<a class="row has-mark" href="#/mazos/' + deck.id + '"><span class="mark" lang="ru">' + esc(deck.glyph) + '</span><span class="row-main"><span class="row-title">' + esc(deck.title) + '</span><span class="row-sub">' + deck.cards.length + ' · ' + known + ' sabidas</span></span><span class="chev" aria-hidden="true"></span></a>';
-    }).join('');
-    const body = '<div class="group">' + rows + '</div>' + helpHtml();
+    const body = '<div class="inset"><input id="search" class="field" value="' + esc(memory.query || '') + '" placeholder="Busca en ruso, sonido o español" aria-label="Buscar vocabulario" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="search"></div>' +
+      '<div id="search-slot">' + window.RusoStudy.searchBlock(memory.query || '') + '</div>' +
+      window.RusoStudy.deckBrowser(state) + helpHtml();
     return shell({
       title: 'Palabras',
       large: 'Palabras',
-      sub: 'Cinco mazos cortos',
+      sub: data.decks.length + ' mazos',
       body: body
     });
   }
@@ -311,11 +319,13 @@
       group.items.push({ card: card, index: index });
     });
     return groups.map(function (group) {
-      const label = group.key === 'verb' ? 'Verbos' : group.key === 'noun' ? 'Sustantivos' : 'En el mazo';
+      const posLabels = { verb: 'Verbos', noun: 'Sustantivos', dia: 'Días', mes: 'Meses', momento: 'Momentos' };
+      const label = posLabels[group.key] || 'En el mazo';
       const rows = group.items.map(function (item) {
         const card = item.card;
         const known = state.known[card.id];
-        return '<a class="row" href="#/mazos/' + deck.id + '/tarjetas" data-action="jump" data-deck="' + deck.id + '" data-index="' + item.index + '"><span class="row-main"><span class="row-title" lang="ru">' + esc(card.ru) + '</span><span class="row-sub">' + esc(card.tr) + '</span></span><span class="row-side"><span class="row-es">' + esc(card.es) + '</span>' + (known ? '<span class="tick" aria-label="Sabida">✓</span>' : '') + '</span></a>';
+        const starred = state.favorites && state.favorites[card.id];
+        return '<div class="row"><a class="row-main" href="#/mazos/' + deck.id + '/tarjetas" data-action="jump" data-deck="' + deck.id + '" data-index="' + item.index + '"><span class="row-title" lang="ru">' + esc(card.ru) + '</span><span class="row-sub">' + esc(card.tr) + '</span></a><span class="row-side"><span class="row-es">' + esc(card.es) + '</span>' + (known ? '<span class="tick" aria-label="Sabida">✓</span>' : '') + '</span><button type="button" class="star' + (starred ? ' is-on' : '') + '" data-action="star" data-id="' + esc(card.id) + '" aria-label="' + (starred ? 'Quitar de favoritas' : 'Guardar en favoritas') + '">★</button></div>';
       }).join('');
       return '<h2 class="group-label">' + label + '</h2><div class="group">' + rows + '</div>';
     }).join('');
@@ -342,6 +352,7 @@
         ['es-ru', 'ES → RU', deck.id, 'direction']
       ]) + '</div>' +
       '<div class="inset"><a class="btn btn-fill" style="width:100%" href="#/mazos/' + deck.id + '/tarjetas">Estudiar tarjetas</a></div>' +
+      '<div class="pair"><a class="btn btn-gray" href="#/mazos/' + deck.id + '/escuchar">Escuchar</a><a class="btn btn-gray" href="#/mazos/' + deck.id + '/escribir">Escribir</a></div>' +
       '<h2 class="group-label">Práctica</h2><div class="inset">' + segmented('Tipo de práctica', mode, [
         ['choice', 'Opciones', deck.id, 'quizMode'],
         ['type', 'Escribir', deck.id, 'quizMode']
@@ -390,8 +401,9 @@
       : card.ru + '. Pronunciación ' + card.tr + '. Pulsa para volver.';
     const faces = frontRu ? faceRu(card, true) + faceEs(card, false) : faceEs(card, true) + faceRu(card, false);
     const canSpeak = speech.supported();
-    const known = state.known[card.id] ? '<div class="inset" style="margin-top:8px;margin-bottom:0"><span class="known-flag">La sabes</span></div>' : '';
-    const body = '<div class="card-tools"><button type="button" class="linkish" data-action="move" data-delta="-1"' + (index === 0 ? ' disabled' : '') + '>Anterior</button><p>' + (index + 1) + ' de ' + deck.cards.length + '</p></div>' +
+    const known = state.known[card.id] ? '<div class="inset" style="margin-top:8px;margin-bottom:0"><span class="known-flag">En repaso</span></div>' : '';
+    const starred = state.favorites && state.favorites[card.id];
+    const body = '<div class="card-tools"><button type="button" class="linkish" data-action="move" data-delta="-1"' + (index === 0 ? ' disabled' : '') + '>Anterior</button><button type="button" class="star' + (starred ? ' is-on' : '') + '" data-action="star" data-id="' + esc(card.id) + '" aria-label="' + (starred ? 'Quitar de favoritas' : 'Guardar en favoritas') + '">★</button><p>' + (index + 1) + ' de ' + deck.cards.length + '</p></div>' +
       '<div class="inset">' + segmented('Dirección de la tarjeta', direction, [
         ['ru-es', 'RU → ES', deck.id, 'direction'],
         ['es-ru', 'ES → RU', deck.id, 'direction']
@@ -517,19 +529,29 @@
     function info(label, value) {
       return '<div class="row static"><span class="row-main"><span class="row-title">' + label + '</span></span><span class="row-meta">' + esc(value) + '</span></div>';
     }
+    const goals = [10, 15, 20, 30];
+    const goalPick = '<div class="inset"><div class="segmented" role="radiogroup" aria-label="Meta diaria">' +
+      goals.map(function (value) {
+        return '<button type="button" role="radio" aria-checked="' + (state.goal === value) + '" data-action="goal" data-goal="' + value + '">' + value + '</button>';
+      }).join('') + '</div></div>';
     const body = '<h2 class="group-label">Apariencia</h2>' + segmentedTheme +
+      '<h2 class="group-label">Meta diaria</h2>' + goalPick +
+      '<p class="alias">Cuenta repasos, aciertos de práctica y letras que escribes.</p>' +
       '<h2 class="group-label">Progreso</h2><div class="group">' +
-      info('Racha', state.streak ? (state.streak === 1 ? '1 día' : state.streak + ' días') : 'Sin racha') +
+      info('Racha de estudio', state.streak ? (state.streak === 1 ? '1 día' : state.streak + ' días') : 'Sin racha') +
       info('Mejor racha', state.bestStreak ? (state.bestStreak === 1 ? '1 día' : state.bestStreak + ' días') : '—') +
+      info('Racha de meta', state.goalStreak ? (state.goalStreak === 1 ? '1 día' : state.goalStreak + ' días') : 'Sin racha') +
+      info('Mejor meta', state.bestGoalStreak ? (state.bestGoalStreak === 1 ? '1 día' : state.bestGoalStreak + ' días') : '—') +
       info('Última sesión', formatStudyDate(state.lastStudyDate)) +
       info('Repasos', String(state.reviews)) +
       info('Aciertos', practice) +
       info('Prácticas terminadas', String(state.quizzes)) +
       info('Letras vistas', seen + ' de 33') +
+      info('Favoritas', String(Object.keys(state.favorites || {}).length)) +
       '</div>' +
       '<h2 class="group-label">Datos</h2><div class="group"><button type="button" class="row danger-row" data-action="open-reset">Restablecer progreso</button></div>' +
       '<h2 class="group-label">En el iPhone</h2><div class="group"><div class="about"><p>En Safari, pulsa Compartir y luego «Añadir a pantalla de inicio».</p><p class="sw-status">Ábrela con conexión una vez para poder usarla sin red.</p><p>Si no oyes el ruso, descarga una voz en Ajustes → Accesibilidad → Contenido leído → Voces.</p></div></div>' +
-      '<h2 class="group-label">Acerca de</h2><div class="group"><div class="about"><p>Estudio Ruso, versión 1. Hecho para Miguel.</p><p>Sin cuenta y sin analítica. El progreso vive solo en este navegador.</p></div></div>';
+      '<h2 class="group-label">Acerca de</h2><div class="group"><div class="about"><p>Estudio Ruso, versión 2. Hecho para Miguel.</p><p>Sin cuenta y sin analítica. El progreso vive solo en este navegador.</p></div></div>';
     return shell({ title: 'Ajustes', large: 'Ajustes', sub: 'En este dispositivo', body: body });
   }
 
@@ -539,6 +561,8 @@
   }
 
   function view(route) {
+    const extra = window.RusoStudy.view(route);
+    if (extra != null) return extra;
     if (route.name === 'home') return renderHome();
     if (route.name === 'letters') return renderLetters();
     if (route.name === 'letter') return renderLetter(route);
@@ -553,6 +577,14 @@
   function titleFor(route) {
     if (route.name === 'home') return 'Inicio';
     if (route.name === 'letters' || route.name === 'letter') return 'Alfabeto';
+    if (route.name === 'path') return 'Ruta';
+    if (route.name === 'syllables' || route.name === 'syllable-quiz') return 'Sílabas';
+    if (route.name === 'grammar') return 'Gramática';
+    if (route.name === 'dialogues' || route.name === 'dialogue') return 'Diálogos';
+    if (route.name === 'review' || route.name === 'review-session') return 'Repaso';
+    if (route.name === 'favorites') return 'Favoritas';
+    if (route.name === 'listen') return 'Escuchar';
+    if (route.name === 'write') return 'Escribir';
     if (route.name === 'settings') return 'Ajustes';
     if (route.name === 'quiz') return 'Práctica';
     if (route.name === 'deck' || route.name === 'cards') {
@@ -564,18 +596,20 @@
 
   function tabKey(route) {
     if (route.name === 'home') return 'home';
-    if (route.name === 'letters' || route.name === 'letter') return 'letters';
     if (route.name === 'settings') return 'settings';
+    if (route.name === 'review' || route.name === 'review-session' || route.name === 'favorites') return 'review';
+    if (route.name === 'decks' || route.name === 'deck' || route.name === 'cards' || route.name === 'quiz' || route.name === 'listen' || route.name === 'write') return 'decks';
     if (route.name === 'missing') return '';
-    return 'decks';
+    return 'path';
   }
 
   function tabs(route) {
     const current = tabKey(route);
     const items = [
       ['home', '#/', 'Inicio', 'home'],
-      ['letters', '#/letras', 'Letras', 'letters'],
+      ['path', '#/ruta', 'Ruta', 'path'],
       ['decks', '#/mazos', 'Palabras', 'words'],
+      ['review', '#/repaso', 'Repaso', 'review'],
       ['settings', '#/ajustes', 'Ajustes', 'gear']
     ];
     return '<nav class="tabs" aria-label="Secciones">' + items.map(function (item) {
@@ -590,6 +624,12 @@
 
   function renderDock(route) {
     const dock = document.getElementById('dock');
+    const studyDock = window.RusoStudy.dock(route);
+    if (typeof studyDock === 'string') {
+      dock.hidden = studyDock === '';
+      dock.innerHTML = studyDock;
+      return;
+    }
     if (route.name === 'cards') {
       const deck = findDeck(route.deckId);
       dock.hidden = false;
@@ -600,7 +640,7 @@
       const index = deckIndex(store.load(), deck);
       dock.innerHTML = index >= deck.cards.length
         ? actionsHtml('<button type="button" class="btn btn-gray" data-action="cards-restart" data-deck="' + deck.id + '">Otra vez</button><button type="button" class="btn btn-fill" data-action="open-quiz" data-deck="' + deck.id + '">Práctica</button>')
-        : actionsHtml('<button type="button" class="btn btn-gray" data-action="rate" data-known="0">Aún no</button><button type="button" class="btn btn-fill" data-action="rate" data-known="1">La sé</button>');
+        : '<div class="dock-actions dock-three"><button type="button" class="btn btn-gray" data-action="grade-card" data-grade="again">Otra vez</button><button type="button" class="btn btn-fill" data-action="grade-card" data-grade="good">Bien</button><button type="button" class="btn btn-gray" data-action="grade-card" data-grade="easy">Fácil</button></div>';
       return;
     }
     if (route.name === 'quiz' && memory.quiz && memory.quiz.deckId === route.deckId && memory.quiz.phase !== 'result') {
@@ -641,7 +681,27 @@
 
   let lastHash = null;
 
+  function bindApi() {
+    window.RusoAppApi = {
+      esc: esc,
+      shell: shell,
+      store: store,
+      data: data,
+      text: text,
+      speech: speech,
+      srs: window.RusoSrs,
+      cyr: window.RusoCyr,
+      memory: memory,
+      go: go,
+      render: render,
+      icon: icon,
+      bar: bar,
+      findDeck: findDeck
+    };
+  }
+
   function render() {
+    bindApi();
     speech.cancel();
     const route = parseRoute();
     remember(route);
@@ -701,15 +761,10 @@
     else if (quiz.missed.indexOf(card.id) === -1) quiz.missed.push(card.id);
     store.update(function (state) {
       state.quizAnswered += 1;
-      if (isCorrect) {
-        state.quizCorrect += 1;
-        state.known[card.id] = true;
-      } else {
-        delete state.known[card.id];
-      }
+      if (isCorrect) state.quizCorrect += 1;
       state.lastPlace = { type: 'deck', deckId: deck.id, mode: 'quiz' };
-      store.markStudy(state);
     });
+    window.RusoStudy.applySchedule(card.id, isCorrect ? 'good' : 'again');
     render();
   }
 
@@ -746,7 +801,7 @@
     render();
   }
 
-  function rate(known) {
+  function gradeCard(gradeName) {
     const route = parseRoute();
     const deck = findDeck(route.deckId);
     if (!deck) return;
@@ -754,14 +809,11 @@
     if (index >= deck.cards.length) return;
     const card = deck.cards[index];
     memory.flipped = false;
+    window.RusoStudy.applySchedule(card.id, gradeName);
     store.update(function (state) {
-      if (known) state.known[card.id] = true;
-      else delete state.known[card.id];
-      state.reviews += 1;
       const prev = state.deckState[deck.id] || {};
       state.deckState[deck.id] = Object.assign({}, prev, { index: index + 1 });
       state.lastPlace = { type: 'deck', deckId: deck.id, mode: 'cards' };
-      store.markStudy(state);
     });
     render();
   }
@@ -805,6 +857,7 @@
     const el = event.target.closest('[data-action]');
     if (!el) return;
     const action = el.dataset.action;
+    if (window.RusoStudy.handle(action, el)) return;
     if (action === 'flip') {
       doFlip();
       return;
@@ -848,8 +901,8 @@
       openQuiz(el.dataset.deck, true);
       return;
     }
-    if (action === 'rate') {
-      rate(el.dataset.known === '1');
+    if (action === 'grade-card') {
+      gradeCard(el.dataset.grade || 'good');
       return;
     }
     if (action === 'move') {
@@ -895,8 +948,28 @@
       store.reset();
       memory.quiz = null;
       memory.flipped = false;
+      memory.query = '';
+      memory.review = null;
+      memory.listen = null;
+      memory.write = null;
+      memory.syllable = null;
+      memory.dialogue = null;
+      memory.grammar = null;
       closeSheet();
       render();
+    }
+  });
+
+  document.addEventListener('input', function (event) {
+    if (event.target.id === 'search') {
+      memory.query = event.target.value;
+      const slot = document.getElementById('search-slot');
+      if (slot) slot.innerHTML = window.RusoStudy.searchBlock(memory.query);
+      return;
+    }
+    if (event.target.id === 'latin-help') {
+      const preview = document.getElementById('latin-preview');
+      if (preview) preview.textContent = window.RusoCyr.latinToCyrillic(event.target.value);
     }
   });
 

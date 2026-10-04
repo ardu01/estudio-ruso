@@ -2,7 +2,7 @@
   "id": "./index.html",
   "name": "Estudio Ruso",
   "short_name": "Ruso",
-  "description": "Alfabeto, vocabulario y práctica de ruso básico, con la interfaz en español.",
+  "description": "Alfabeto, vocabulario, gramática y repaso de ruso básico, con la interfaz en español.",
   "lang": "es",
   "dir": "ltr",
   "start_url": "./index.html",

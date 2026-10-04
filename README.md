@@ -4,15 +4,22 @@ PWA personal para estudiar ruso básico desde cero. La interfaz está en españo
 
 Hecha para Miguel. Sin cuenta, sin servidor y sin analítica: el progreso se guarda en el navegador.
 
-## Qué cubre la v1
+## Qué cubre la v2
 
-- **Inicio.** Saludo, seguir por donde lo dejaste, acceso a cada sección y un resumen de racha, repasos, aciertos y letras.
-- **Alfabeto.** Las 33 letras, con pista de pronunciación, nota en español y un ejemplo. Si el navegador tiene voz, al tocar «Escuchar» suena en ruso.
-- **Mazos.** Saludos, frases cortas, números del 1 al 20, colores, y verbos y sustantivos de uso diario.
-- **Tarjetas.** Ruso → español o español → ruso. Toca la tarjeta para voltearla, márcala como «La sé» o «Aún no».
-- **Práctica.** Diez preguntas del mazo en curso: opciones o escritura. En escritura acepta el español sin obsesionarse con los acentos, y el ruso en cirílico o en letras latinas.
-- **Progreso.** Solo `localStorage` (clave `estudio-ruso`): último sitio, racha, tarjetas sabidas y aciertos.
-- **Ajustes.** Tema sistema, claro u oscuro, y borrar el progreso sin cambiar el tema.
+La ruta va del alfabeto a las sílabas, las primeras palabras, la gramática básica y unos diálogos cortos. No está bloqueada: es una lista y un «siguiente paso».
+
+- **Inicio.** Saludo, seguir por donde lo dejaste, meta del día, el siguiente paso de la ruta y el repaso que toca hoy.
+- **Alfabeto.** Las 33 letras, con pista de pronunciación, nota en español y un ejemplo. Si el navegador tiene voz, «Escuchar» suena en ruso.
+- **Sílabas.** Consonante más vocal, para oír y elegir el cirílico.
+- **Mazos.** Saludos, frases, números, colores y palabras de uso diario, y además familia, comida, viaje, tiempo, clima, casa, cuerpo, animales, compras, restaurante, direcciones, emociones, trabajo y clase, adjetivos, preguntas, pronombres y preposiciones.
+- **Tarjetas.** Ruso → español o español → ruso. Al voltear, marcas Otra vez, Bien o Fácil. Eso programa la siguiente vez (un repaso espaciado sencillo, al estilo SM-2). La estrella guarda la palabra en Favoritas.
+- **Práctica.** Opciones o escritura, y además Escuchar (eliges el significado de lo que oyes) y Escribir (teclado cirílico, o una ayuda de latino a cirílico que es aproximada).
+- **Gramática.** Género, plural, presente de verbos frecuentes, nominativo y acusativo, y posesión.
+- **Diálogos.** Escenas cortas con un hueco para completar.
+- **Repaso.** Solo lo que vence hoy, más hasta diez palabras nuevas. No saca todo el archivo de golpe.
+- **Búsqueda.** En Palabras, por cirílico, pronunciación o español.
+- **Progreso.** Solo `localStorage` (clave `estudio-ruso`): último sitio, racha de estudio, racha de meta, tarjetas y aciertos. Si había progreso de la v1, las tarjetas marcadas pasan al repaso.
+- **Ajustes.** Tema sistema, claro u oscuro, meta diaria (10, 15, 20 o 30) y borrar el progreso. El tema y la meta se conservan al borrar.
 
 ## Abrir en local
 
