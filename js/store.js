@@ -3,7 +3,7 @@
 
   function blank() {
     return {
-      v: 1,
+      v: 2,
       theme: 'system',
       streak: 0,
       bestStreak: 0,
@@ -15,7 +15,19 @@
       known: {},
       seenLetters: {},
       lastPlace: null,
-      deckState: {}
+      deckState: {},
+      srs: {},
+      favorites: {},
+      goal: 15,
+      goalCount: 0,
+      goalDate: null,
+      goalStreak: 0,
+      bestGoalStreak: 0,
+      goalStreakDate: null,
+      goalMetDate: null,
+      newCount: 0,
+      newDate: null,
+      pathDone: {}
     };
   }
 
@@ -46,8 +58,18 @@
     const base = blank();
     if (!raw || typeof raw !== 'object') return base;
     const theme = raw.theme === 'light' || raw.theme === 'dark' || raw.theme === 'system' ? raw.theme : 'system';
+    const goals = [5, 10, 15, 20, 30];
+    const known = raw.known && typeof raw.known === 'object' ? raw.known : {};
+    let srs = raw.srs && typeof raw.srs === 'object' ? raw.srs : null;
+    if (!srs) {
+      srs = {};
+      const today = todayKey();
+      Object.keys(known).forEach(function (id) {
+        srs[id] = { ease: 2.5, interval: 3, reps: 2, lapses: 0, due: addDays(today, 3) };
+      });
+    }
     return {
-      v: 1,
+      v: 2,
       theme: theme,
       streak: Number(raw.streak) || 0,
       bestStreak: Number(raw.bestStreak) || 0,
@@ -56,11 +78,48 @@
       quizCorrect: Number(raw.quizCorrect) || 0,
       quizAnswered: Number(raw.quizAnswered) || 0,
       quizzes: Number(raw.quizzes) || 0,
-      known: raw.known && typeof raw.known === 'object' ? raw.known : {},
+      known: known,
       seenLetters: raw.seenLetters && typeof raw.seenLetters === 'object' ? raw.seenLetters : {},
       lastPlace: raw.lastPlace && typeof raw.lastPlace === 'object' ? raw.lastPlace : null,
-      deckState: raw.deckState && typeof raw.deckState === 'object' ? raw.deckState : {}
+      deckState: raw.deckState && typeof raw.deckState === 'object' ? raw.deckState : {},
+      srs: srs,
+      favorites: raw.favorites && typeof raw.favorites === 'object' ? raw.favorites : {},
+      goal: goals.indexOf(Number(raw.goal)) >= 0 ? Number(raw.goal) : 15,
+      goalCount: Number(raw.goalCount) || 0,
+      goalDate: typeof raw.goalDate === 'string' ? raw.goalDate : null,
+      goalStreak: Number(raw.goalStreak) || 0,
+      bestGoalStreak: Number(raw.bestGoalStreak) || 0,
+      goalStreakDate: typeof raw.goalStreakDate === 'string' ? raw.goalStreakDate : null,
+      goalMetDate: typeof raw.goalMetDate === 'string' ? raw.goalMetDate : null,
+      newCount: Number(raw.newCount) || 0,
+      newDate: typeof raw.newDate === 'string' ? raw.newDate : null,
+      pathDone: raw.pathDone && typeof raw.pathDone === 'object' ? raw.pathDone : {}
     };
+  }
+
+  function addDays(iso, days) {
+    const parts = String(iso).split('-').map(Number);
+    const date = new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+    date.setDate(date.getDate() + (days || 0));
+    return todayKey(date);
+  }
+
+  function bumpGoal(state, amount) {
+    const today = todayKey();
+    if (state.goalDate !== today) {
+      state.goalDate = today;
+      state.goalCount = 0;
+    }
+    state.goalCount += amount || 1;
+    const target = state.goal || 15;
+    if (state.goalCount >= target && state.goalMetDate !== today) {
+      state.goalMetDate = today;
+      if (state.goalStreakDate === prevDate(today)) state.goalStreak = (Number(state.goalStreak) || 0) + 1;
+      else state.goalStreak = 1;
+      state.goalStreakDate = today;
+      state.bestGoalStreak = Math.max(Number(state.bestGoalStreak) || 0, state.goalStreak);
+    }
+    return state;
   }
 
   let memory = null;
@@ -68,7 +127,10 @@
   function read() {
     try {
       if (typeof localStorage === 'undefined') return blank();
-      return sanitize(JSON.parse(localStorage.getItem(KEY) || 'null'));
+      const raw = JSON.parse(localStorage.getItem(KEY) || 'null');
+      const state = sanitize(raw);
+      if (!raw || raw.v !== 2) persist(state);
+      return state;
     } catch (error) {
       return blank();
     }
@@ -96,9 +158,10 @@
   }
 
   function reset() {
-    const theme = load().theme;
+    const current = load();
     memory = blank();
-    memory.theme = theme;
+    memory.theme = current.theme;
+    memory.goal = current.goal || 15;
     persist(memory);
     return memory;
   }
@@ -108,7 +171,9 @@
     blank: blank,
     todayKey: todayKey,
     prevDate: prevDate,
+    addDays: addDays,
     markStudy: markStudy,
+    bumpGoal: bumpGoal,
     sanitize: sanitize,
     load: load,
     update: update,
