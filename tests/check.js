@@ -6,7 +6,7 @@ const sandbox = {};
 sandbox.globalThis = sandbox;
 vm.createContext(sandbox);
 
-['js/data.js', 'js/text.js', 'js/store.js'].forEach(function (file) {
+['js/data.js', 'js/vocab.js', 'js/lessons.js', 'js/text.js', 'js/srs.js', 'js/cyrillic.js', 'js/store.js'].forEach(function (file) {
   vm.runInContext(fs.readFileSync(path.join(__dirname, '..', file), 'utf8'), sandbox, { filename: file });
 });
 
@@ -34,7 +34,7 @@ data.alphabet.forEach(function (letter) {
 });
 assert(groups.vowel === 10 && groups.consonant === 21 && groups.sign === 2, 'letter groups 10/21/2');
 
-assert(data.decks.length === 5, 'five decks');
+assert(data.decks.length >= 20, 'many decks');
 const cardIds = {};
 data.decks.forEach(function (deck) {
   assert(deck.cards.length > 0, 'deck not empty ' + deck.id);
@@ -84,6 +84,61 @@ assert(streak.streak === 1 && streak.bestStreak === 2, 'gap resets and keeps bes
 
 const clean = store.sanitize({ theme: 'nope', streak: '3', known: null });
 assert(clean.theme === 'system' && clean.streak === 3 && clean.known && !clean.known.a, 'sanitize');
+assert(clean.v === 2 && clean.goal === 15 && clean.srs && clean.favorites, 'v2 defaults');
+
+const migrated = store.sanitize({ v: 1, theme: 'dark', known: { 'saludos-01': true } });
+assert(migrated.theme === 'dark', 'migration keeps theme');
+assert(migrated.srs['saludos-01'] && migrated.srs['saludos-01'].reps === 2 && migrated.srs['saludos-01'].interval === 3, 'known becomes srs');
+
+const lessons = sandbox.RusoLessons;
+const srs = sandbox.RusoSrs;
+const cyr = sandbox.RusoCyr;
+assert(lessons.syllables.length === 48, '48 syllables');
+assert(cyr.latinToCyrillic('privet') === 'привет', 'latin privet');
+assert(cyr.latinToCyrillic('chay') === 'чай', 'latin chay');
+assert(cyr.latinToCyrillic('tyotya') === 'тётя', 'latin tyotya');
+assert(cyr.latinToCyrillic('khorosho') === 'хорошо', 'latin khorosho');
+assert(cyr.latinToCyrillic('dobryy') === 'добрый', 'latin dobryy');
+assert(cyr.latinToCyrillic('ty') === 'ты', 'latin ty');
+assert(cyr.latinToCyrillic('moy') === 'мой', 'latin moy');
+assert(cyr.latinToCyrillic('krasnyy') === 'красный', 'latin krasnyy');
+
+const good = srs.schedule(null, 'good', '2026-10-01');
+assert(good.interval === 1 && good.due === '2026-10-02' && good.reps === 1, 'srs good');
+const lapse = srs.schedule(good, 'again', '2026-10-02');
+assert(lapse.reps === 0 && lapse.due === '2026-10-02', 'srs again');
+
+const wanted = ['familia', 'comida', 'viaje', 'tiempo', 'clima', 'casa', 'cuerpo', 'animales', 'compras', 'restaurante', 'direcciones', 'emociones', 'trabajo', 'adjetivos', 'preguntas', 'pronombres', 'preposiciones'];
+wanted.forEach(function (id) {
+  assert(data.decks.some(function (deck) { return deck.id === id && deck.cards.length >= 8; }), 'deck ' + id);
+});
+
+lessons.path.forEach(function (step) {
+  if (step.deckId) {
+    assert(data.decks.some(function (deck) { return deck.id === step.deckId; }), 'path deck ' + step.deckId);
+  }
+});
+
+lessons.grammar.forEach(function (lesson) {
+  assert(lesson.questions.length >= 4, 'grammar questions ' + lesson.id);
+  lesson.questions.forEach(function (question, index) {
+    assert(question.answer >= 0 && question.answer < question.options.length, 'grammar answer ' + lesson.id + ' ' + index);
+    assert(!/[<>]/.test(question.prompt + question.options.join('')), 'grammar text ' + lesson.id);
+  });
+});
+
+lessons.dialogues.forEach(function (scene) {
+  const blanks = scene.lines.filter(function (line) { return line.blank; });
+  assert(blanks.length >= 1, 'dialogue blank ' + scene.id);
+  blanks.forEach(function (line) {
+    assert(line.blank.options.indexOf(line.blank.answer) >= 0, 'blank option ' + scene.id);
+    assert(line.ru.indexOf(line.blank.answer) >= 0, 'blank in line ' + scene.id);
+  });
+});
+
+const goalState = store.blank();
+store.bumpGoal(goalState, 15);
+assert(goalState.goalCount === 15 && goalState.goalStreak === 1, 'goal met');
 
 if (failed) {
   console.error(failed + ' failed');

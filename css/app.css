@@ -665,7 +665,7 @@ main {
 .tabs { display: flex; min-height: 49px; }
 .tab {
   flex: 1;
-  min-width: 44px;
+  min-width: 0;
   min-height: 49px;
   display: flex;
   flex-direction: column;
@@ -673,13 +673,45 @@ main {
   justify-content: center;
   gap: 1px;
   color: var(--tab);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 500;
 }
 .tab svg { width: 24px; height: 24px; }
 .tab[aria-current="page"] { color: var(--accent); font-weight: 600; }
 .dock-actions { display: flex; gap: 10px; padding: 8px 16px; }
 .dock-actions .btn { flex: 1; }
+.dock-three { gap: 8px; padding-left: 12px; padding-right: 12px; }
+.dock-three .btn { font-size: 15px; padding-left: 6px; padding-right: 6px; min-height: 44px; }
+
+a.continue { display: block; color: inherit; }
+
+.star {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--tertiary);
+  font-size: 22px;
+  line-height: 1;
+}
+.star.is-on { color: var(--accent); }
+
+.keys { margin: 4px 10px 16px; user-select: none; }
+.key-row { display: flex; gap: 4px; margin-bottom: 4px; }
+.key {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--label);
+  font-size: 17px;
+  padding: 0 1px;
+}
+.key-wide { font-size: 14px; }
+#latin-preview:empty::before { content: '…'; color: var(--tertiary); }
 
 .sheet-root {
   position: fixed;

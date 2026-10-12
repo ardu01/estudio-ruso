@@ -1,13 +1,18 @@
 /* App shell: network first, then the precache, so a refresh picks up
    edits and a later visit still opens offline. */
-const CACHE = 'estudio-ruso-v1';
+const CACHE = 'estudio-ruso-v2';
 const FILES = [
   './index.html',
   './css/app.css',
   './js/data.js',
+  './js/vocab.js',
+  './js/lessons.js',
   './js/text.js',
+  './js/srs.js',
+  './js/cyrillic.js',
   './js/store.js',
   './js/speech.js',
+  './js/study.js',
   './js/app.js',
   './manifest.webmanifest',
   './icons/icon.svg',
